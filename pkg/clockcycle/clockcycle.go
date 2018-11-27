@@ -1,8 +1,7 @@
-package main
+package clockcycle
 
 import(
 	"time"
-	"fmt"
 )
 
 //ClockCycle sents ticks to a channel 
