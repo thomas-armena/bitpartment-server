@@ -44,15 +44,17 @@ func main(){
 	bob := models.Tenant{ ID: 1, Name: "Bob", Location: &models.Room{ Name: "limbo" }, Doing: &sleeping }
 
 	//Initialize clock cycle
-	update := make(chan int)
+	update := make(chan clockcycle.ClockTime)
 	location, _ := time.LoadLocation("EST")
 	startTime := time.Date(time.Now().Year(),time.Now().Month(), time.Now().Day(), 0, 0, 0, 0, location)
 	clock := clockcycle.ClockCycle{ StartTime: startTime, Interval: time.Duration(1*time.Second), Frequency: 24*4, Update: update }
 	go clock.Start()
 	for {
 		fmt.Println("-----------------")
-		interval := <-clock.Update
-		fmt.Println(interval)
+		clocktime := <-clock.Update
+		interval := clocktime.Interval
+		cycle := clocktime.Cycle
+		fmt.Println(cycle, interval)
 		hour := int(interval / 4)
 		minute := (interval % 4) * 15
 		fmt.Println(hour, ":",minute)
