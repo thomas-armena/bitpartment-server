@@ -36,9 +36,6 @@ func main(){
 	sleeping := models.Doing{ Name: "sleeping" }
 	working := models.Doing{ Name: "coding" }
 
-	//Define actions
-	goToWork := models.Action{ Interval: 32, Doing: &working, Location: &work }
-	goToSleep := models.Action{ Interval: 88, Doing: &sleeping, Location: &bedroom }
 
 	//Define tenant
 	bob := models.Tenant{ ID: 1, Name: "Bob", Location: &models.Room{ Name: "limbo" }, Doing: &sleeping }
@@ -46,26 +43,28 @@ func main(){
 	//Initialize clock cycle
 	update := make(chan clockcycle.ClockTime)
 	location, _ := time.LoadLocation("EST")
+	frq := 12
 	startTime := time.Date(time.Now().Year(),time.Now().Month(), time.Now().Day(), 0, 0, 0, 0, location)
-	clock := clockcycle.ClockCycle{ StartTime: startTime, Interval: time.Duration(1*time.Second), Frequency: 24*4, Update: update }
+	clock := clockcycle.ClockCycle{ StartTime: startTime, Interval: time.Duration(1*time.Second), Frequency: frq, Update: update }
 	go clock.Start()
 	for {
 		fmt.Println("-----------------")
 		clocktime := <-clock.Update
 		interval := clocktime.Interval
 		cycle := clocktime.Cycle
-		fmt.Println(cycle, interval)
-		hour := int(interval / 4)
-		minute := (interval % 4) * 15
-		fmt.Println(hour, ":",minute)
+		fmt.Println("cycle:",cycle,"interval:",interval)
+		//hour := int(interval / 4)
+		//minute := (interval % 4) * 15
+		//fmt.Println(hour, ":",minute)
 
-		if interval == 40 {
-			bob.AddAction(interval, 24*4, &goToWork);
-			bob.AddAction(interval, 24*4, &goToSleep);
+		goToWork := models.Action{ Cycle: cycle+1, Interval: 4, Doing: &working, Location: &work }
+		goToSleep := models.Action{ Cycle: cycle, Interval: 11, Doing: &sleeping, Location: &bedroom }
+		if interval == 5 {
+			bob.AddAction(cycle, interval, frq, &goToWork);
+			bob.AddAction(cycle, interval, frq, &goToSleep);
 		}
-		bob.DoNextAction(interval)
+		bob.DoNextAction(cycle, interval)
 		fmt.Println(bob.Doing, bob.Location)
-		bob.PrintSchedule()
 	}
 
 }
