@@ -1,32 +1,22 @@
 package main
 
 import (
-	"net/http"
-	"github.com/gorilla/mux"
-	"github.com/gorilla/handlers"
 	"fmt"
 	"github.com/thomas-armena/bitpartment-server/internal/models"
 	"github.com/thomas-armena/bitpartment-server/pkg/clockcycle"
+	"github.com/thomas-armena/bitpartment-server/internal/routes"
 	"time"
 )
 
 
-func createTenant(w http.ResponseWriter, r *http.Request){
-	params := mux.Vars(r)
-	fmt.Println(params)
-	fmt.Println("name: ",params["name"])
-	t := models.Tenant{ ID: 1, Name: params["name"] }
-	fmt.Println(t)
-}
 
 func main(){
-	//Initialize server
-	corsObj:=handlers.AllowedOrigins([]string{"*"})
-	router := mux.NewRouter()
-	router.HandleFunc("/create-tenant/{name}", createTenant).Methods("GET")
-	go http.ListenAndServe(":8000", handlers.CORS(corsObj)(router))
-	fmt.Println("Listening on port 8000")
 
+	world := models.World{Houses: make(map[int]*models.House)}
+	bprouter := routes.NewBPRouter(&world)
+
+	//Initialize server
+	go bprouter.Run()
 
 	//Define rooms
 	bedroom := models.Room{ Name: "bedroom" }
@@ -53,9 +43,6 @@ func main(){
 		interval := clocktime.Interval
 		cycle := clocktime.Cycle
 		fmt.Println("cycle:",cycle,"interval:",interval)
-		//hour := int(interval / 4)
-		//minute := (interval % 4) * 15
-		//fmt.Println(hour, ":",minute)
 
 		goToWork := models.Action{ Cycle: cycle+1, Interval: 4, Doing: &working, Location: &work }
 		goToSleep := models.Action{ Cycle: cycle, Interval: 11, Doing: &sleeping, Location: &bedroom }
@@ -64,7 +51,11 @@ func main(){
 			bob.AddAction(cycle, interval, frq, &goToSleep);
 		}
 		bob.DoNextAction(cycle, interval)
-		fmt.Println(bob.Doing, bob.Location)
+		//fmt.Println(bob.Doing, bob.Location)
+		for id, house := range world.Houses {
+			fmt.Println(id, house.Tenants)
+		}
+		fmt.Println(world.Houses)
 	}
 
 }

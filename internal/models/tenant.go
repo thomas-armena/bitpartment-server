@@ -10,6 +10,11 @@ type Tenant struct{
 	Location	*Room
 	Doing		*Doing
 	NextAction	*Action
+	IQ			float64
+	Charisma	float64
+	WorkEthics	float64
+	Health		float64
+	Dexterity	float64
 }
 
 //DoAction is a function that changes the state of a tenant using a TenantChange struct
