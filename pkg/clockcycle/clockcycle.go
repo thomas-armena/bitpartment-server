@@ -1,21 +1,21 @@
 package clockcycle
 
-import(
+import (
 	"time"
 )
 
-//ClockCycle sents ticks to a channel 
+//ClockCycle sents ticks to a channel
 type ClockCycle struct {
 	StartTime time.Time
-	Interval time.Duration
+	Interval  time.Duration
 	Frequency int
-	Update chan ClockTime
+	Update    chan ClockTime
 }
 
 //ClockTime is a struct that stores the time of a cycle
 type ClockTime struct {
-	Interval	int
-	Cycle		int
+	Interval int
+	Cycle    int
 }
 
 //Start is a function that will begin the clock cycle and return updates to the Update channel
@@ -29,7 +29,7 @@ func (clockcycle *ClockCycle) Start() {
 
 		interval := intervalsPassed % clockcycle.Frequency
 		cycle := int(intervalsPassed / clockcycle.Frequency)
-		clockcycle.Update <- ClockTime{ interval, cycle }
+		clockcycle.Update <- ClockTime{interval, cycle}
 	}
 }
 
@@ -49,5 +49,3 @@ func main() {
 	}
 }
 */
-
-
