@@ -10,13 +10,13 @@ import (
 	"strconv"
 )
 
-func (bprouter *BPRouter) tenantRoutes() {
+func (server *Server) tenantRoutes() {
 	//Tenant routes
-	tenantRouter := bprouter.Router.PathPrefix("/tenant").Subrouter()
-	tenantRouter.HandleFunc("/create/{house_id}/", bprouter.createTenant).Methods("POST", "OPTIONS")
+	tenantRouter := server.Router.PathPrefix("/tenant").Subrouter()
+	tenantRouter.HandleFunc("/create/{house_id}/", server.createTenant).Methods("POST", "OPTIONS")
 }
 
-func (bprouter *BPRouter) createTenant(w http.ResponseWriter, r *http.Request) {
+func (server *Server) createTenant(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 
 	//Find house to insert tenant in from url parameters
@@ -24,7 +24,7 @@ func (bprouter *BPRouter) createTenant(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	house := bprouter.World.Houses[houseid]
+	house := server.World.Houses[houseid]
 
 	//Get tenant creation data from request body
 	body, err := ioutil.ReadAll(r.Body)

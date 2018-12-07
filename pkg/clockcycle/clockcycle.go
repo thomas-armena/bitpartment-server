@@ -32,20 +32,3 @@ func (clockcycle *ClockCycle) Start() {
 		clockcycle.Update <- ClockTime{interval, cycle}
 	}
 }
-
-/*
-func main() {
-	fmt.Println("clock cycle test")
-	update := make(chan int)
-	location, _ := time.LoadLocation("EST")
-	startTime := time.Date(time.Now().Year(), time.Now().Month(), time.Now().Day(), 0, 15, 3, 0, location)
-	fmt.Println("startTime:", startTime)
-	fmt.Println("now:      ",time.Now())
-	clockCycle := ClockCycle{ StartTime: startTime, Interval: time.Duration(10*time.Second), Frequency: 12, Update: update }
-	fmt.Println(time.Now())
-	go clockCycle.Start()
-	for {
-		fmt.Println(<-clockCycle.Update)
-	}
-}
-*/

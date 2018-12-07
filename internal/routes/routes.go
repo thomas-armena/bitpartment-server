@@ -5,28 +5,30 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
 	"github.com/thomas-armena/bitpartment-server/internal/models"
+	"github.com/thomas-armena/bitpartment-server/pkg/clockcycle"
 	"log"
 	"net/http"
 )
 
-//BPRouter is a struct that stores the main route for the server
-type BPRouter struct {
+//Server is a struct that stores the main route for the server
+type Server struct {
 	World  *models.World
 	Router *mux.Router
+	Clock  *clockcycle.ClockCycle
 }
 
-//NewBPRouter is a constructor for the BPRouter struct
-func NewBPRouter(world *models.World) *BPRouter {
+//NewServer is a constructor for the Server struct
+func NewServer(world *models.World, clock *clockcycle.ClockCycle) *Server {
 	router := mux.NewRouter()
-	bprouter := &BPRouter{Router: router, World: world}
-	bprouter.houseRoutes()
-	bprouter.tenantRoutes()
-	bprouter.Router = router
-	return bprouter
+	server := &Server{Router: router, World: world, Clock: clock}
+	server.houseRoutes()
+	server.tenantRoutes()
+	server.Router = router
+	return server
 }
 
 //Run is a function that serves the router
-func (bprouter *BPRouter) Run() {
+func (server *Server) Run() {
 	c := cors.New(cors.Options{
 		AllowedMethods:     []string{"GET", "POST", "OPTIONS"},
 		AllowedOrigins:     []string{"http://localhost:3000"},
@@ -34,7 +36,7 @@ func (bprouter *BPRouter) Run() {
 		AllowedHeaders:     []string{"Content-Type", "Bearer", "Bearer ", "content-type", "Origin", "Accept"},
 		OptionsPassthrough: true,
 	})
-	handler := c.Handler(bprouter.Router)
+	handler := c.Handler(server.Router)
 	log.Fatal(http.ListenAndServe(":8000", handler))
 	fmt.Println("Listening on port 8000")
 }

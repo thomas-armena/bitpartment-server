@@ -11,10 +11,6 @@ import (
 func main() {
 
 	world := models.World{Houses: make(map[int]*models.House)}
-	bprouter := routes.NewBPRouter(&world)
-
-	//Initialize server
-	go bprouter.Run()
 
 	//Define rooms
 	bedroom := models.Room{Name: "bedroom"}
@@ -34,6 +30,11 @@ func main() {
 	startTime := time.Date(time.Now().Year(), time.Now().Month(), time.Now().Day(), 0, 0, 0, 0, location)
 	clock := clockcycle.ClockCycle{StartTime: startTime, Interval: time.Duration(1 * time.Second), Frequency: frq, Update: update}
 	go clock.Start()
+
+	//Initialize server
+	bprouter := routes.NewServer(&world, &clock)
+	go bprouter.Run()
+
 	for {
 		fmt.Println("-----------------")
 		clocktime := <-clock.Update

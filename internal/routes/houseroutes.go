@@ -7,20 +7,20 @@ import (
 	"strconv"
 )
 
-func (bprouter *BPRouter) houseRoutes() {
+func (server *Server) houseRoutes() {
 
 	//House routes
-	houseRouter := bprouter.Router.PathPrefix("/house").Subrouter()
-	houseRouter.HandleFunc("/create/{id}/", bprouter.createHouse).Methods("GET")
+	houseRouter := server.Router.PathPrefix("/house").Subrouter()
+	houseRouter.HandleFunc("/create/{id}/", server.createHouse).Methods("GET")
 }
 
-func (bprouter *BPRouter) createHouse(w http.ResponseWriter, r *http.Request) {
+func (server *Server) createHouse(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	houseid, err := strconv.Atoi(params["id"])
 	if err != nil {
 		panic(err)
 	}
 	house := models.House{ID: houseid}
-	bprouter.World.AddHouse(house)
+	server.World.AddHouse(house)
 
 }
