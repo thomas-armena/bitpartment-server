@@ -23,6 +23,7 @@ func NewServer(world *models.World, clock *clockcycle.ClockCycle) *Server {
 	server := &Server{Router: router, World: world, Clock: clock}
 	server.houseRoutes()
 	server.tenantRoutes()
+	server.websocketRoutes()
 	server.Router = router
 	return server
 }
