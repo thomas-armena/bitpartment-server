@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/gorilla/websocket"
 	"net/http"
@@ -13,17 +14,47 @@ func (server *Server) websocketRoutes() {
 
 var upgrader = websocket.Upgrader{}
 
+type message struct {
+	Username string
+	HouseID  int
+}
+
 func (server *Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	upgrader.CheckOrigin = func(r *http.Request) bool { return true }
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println("websocket listening ...")
-	go func(conn *websocket.Conn) {
-		for {
-			mType, msg, _ := conn.ReadMessage()
-			conn.WriteMessage(mType, msg)
+
+	connected := false
+	var msg message
+
+	//Initialize connection with world
+	go func(server *Server, conn *websocket.Conn, connected *bool, msg *message) {
+		mType, data, err := conn.ReadMessage()
+		if err != nil {
+			fmt.Println(err)
+			return
 		}
-	}(conn)
+		fmt.Println(mType, string(data), err)
+		if err := json.Unmarshal(data, msg); err != nil {
+			panic(err)
+		}
+		fmt.Println(server.World.OpenConnection((*msg).Username, (*msg).HouseID))
+		fmt.Println("connected!")
+
+		//Start streaming updated data of requested house to client
+		go func(server *Server, conn *websocket.Conn, msg *message) {
+			for {
+				if _, _, err := conn.ReadMessage(); err != nil {
+					fmt.Println("Websocket err:", err)
+					return
+				}
+				house := <-server.World.Connections[msg.Username].Channel
+				fmt.Println(house)
+				fmt.Println(server.World.Houses)
+				websocket.WriteJSON(conn, house)
+			}
+		}(server, conn, msg)
+	}(server, conn, &connected, &msg)
 }

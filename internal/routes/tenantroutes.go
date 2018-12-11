@@ -37,4 +37,6 @@ func (server *Server) createTenant(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 	house.AddTenant(tenant)
+	respondWithJSON(w, http.StatusCreated, tenant)
+
 }
