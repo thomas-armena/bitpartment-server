@@ -75,6 +75,13 @@ func (world *World) OpenConnection(connectionID string, houseID int) *Connection
 	return world.Connections[connectionID]
 }
 
+//ChangeConnection changes the houseID of a connection
+func (world *World) ChangeConnection(connectionID string, houseID int) *Connection {
+	world.Connections[connectionID].HouseID = houseID
+	fmt.Println("changed connection", connectionID, "to house", houseID)
+	return world.Connections[connectionID]
+}
+
 //CloseConnection removes a connection from the world
 func (world *World) CloseConnection(connectionID string) {
 	_, ok := world.Connections[connectionID]

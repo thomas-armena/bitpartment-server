@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/thomas-armena/bitpartment-server/internal/models"
 	"github.com/thomas-armena/bitpartment-server/internal/routes"
 	"github.com/thomas-armena/bitpartment-server/pkg/clockcycle"
@@ -40,6 +41,7 @@ func main() {
 
 	for {
 		clocktime := <-clock.Update
+		fmt.Println(clocktime.Cycle, clocktime.Interval)
 		world.Update(clocktime.Cycle, clocktime.Interval)
 		world.DispatchConnections()
 
