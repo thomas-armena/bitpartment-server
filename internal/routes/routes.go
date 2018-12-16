@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
-	"github.com/thomas-armena/bitpartment-server/internal/models"
+	"github.com/thomas-armena/bitpartment-server/internal/db"
 	"github.com/thomas-armena/bitpartment-server/pkg/clockcycle"
 	"log"
 	"net/http"
@@ -13,15 +13,16 @@ import (
 
 //Server is a struct that stores the main route for the server
 type Server struct {
-	World  *models.World
-	Router *mux.Router
-	Clock  *clockcycle.ClockCycle
+	DB          *db.BitpartmentDB
+	Router      *mux.Router
+	Clock       *clockcycle.ClockCycle
+	Connections map[string]*Connection
 }
 
 //NewServer is a constructor for the Server struct
-func NewServer(world *models.World, clock *clockcycle.ClockCycle) *Server {
+func NewServer(bpdb *db.BitpartmentDB, clock *clockcycle.ClockCycle) *Server {
 	router := mux.NewRouter()
-	server := &Server{Router: router, World: world, Clock: clock}
+	server := &Server{Router: router, DB: bpdb, Clock: clock}
 	server.houseRoutes()
 	server.tenantRoutes()
 	server.websocketRoutes()

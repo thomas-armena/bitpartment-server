@@ -26,36 +26,28 @@ func (server *Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	connected := false
 	var msg message
 
 	//Initialize connection with world
-	go func(server *Server, conn *websocket.Conn, connected *bool, msg *message) {
-		mType, data, err := conn.ReadMessage()
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-		fmt.Println(mType, string(data), err)
-		if err := json.Unmarshal(data, msg); err != nil {
-			panic(err)
-		}
-		fmt.Println(server.World.OpenConnection((*msg).Username, (*msg).HouseID))
-		fmt.Println("connected!")
-		*connected = true
-		house := server.World.Houses[(*msg).HouseID]
-		websocket.WriteJSON(conn, house)
-	}(server, conn, &connected, &msg)
-
-	//Wait for a connection to be established
-	for {
-		if connected {
-			break
-		}
+	mType, data, err := conn.ReadMessage()
+	if err != nil {
+		fmt.Println(err)
+		return
 	}
+	fmt.Println(mType, string(data), err)
+	if err := json.Unmarshal(data, msg); err != nil {
+		panic(err)
+	}
+	fmt.Println(server.OpenConnection(msg.Username, msg.HouseID))
+	fmt.Println("connected!")
+	house, err := server.DB.GetHouseByID(msg.HouseID)
+	if err != nil {
+		panic(err)
+	}
+	websocket.WriteJSON(conn, house)
 
 	//Change connection to world
-	go func(server *Server, conn *websocket.Conn, connected *bool, msg *message) {
+	go func(server *Server, conn *websocket.Conn, msg *message) {
 		for {
 			mType, data, err := conn.ReadMessage()
 			if err != nil {
@@ -66,20 +58,21 @@ func (server *Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 			if err := json.Unmarshal(data, msg); err != nil {
 				panic(err)
 			}
-			fmt.Println(server.World.ChangeConnection((*msg).Username, (*msg).HouseID))
+			fmt.Println(server.ChangeConnection((*msg).Username, (*msg).HouseID))
 			fmt.Println("connection changed")
-			house := server.World.Houses[(*msg).HouseID]
+			house, err := server.DB.GetHouseByID((*msg).HouseID)
+			if err != nil {
+				panic(err)
+			}
 			websocket.WriteJSON(conn, house)
 		}
-	}(server, conn, &connected, &msg)
+	}(server, conn, &msg)
 
 	//Start streaming updated data of requested house to client
 	go func(server *Server, conn *websocket.Conn, msg *message) {
 		for {
-			house := <-server.World.Connections[msg.Username].Channel
-			fmt.Println(house)
-			fmt.Println(server.World.Houses)
-			websocket.WriteJSON(conn, house)
+			houseID := <-server.Connections[msg.Username].Channel
+			websocket.WriteJSON(conn, struct{ id int }{id: houseID})
 		}
 	}(server, conn, &msg)
 }

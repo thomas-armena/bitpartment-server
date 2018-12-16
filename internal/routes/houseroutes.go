@@ -3,7 +3,7 @@ package routes
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/thomas-armena/bitpartment-server/internal/models"
+	"github.com/thomas-armena/bitpartment-server/internal/db"
 	"io/ioutil"
 	"net/http"
 )
@@ -24,17 +24,18 @@ func (server *Server) createHouse(w http.ResponseWriter, r *http.Request) {
 	}
 	fmt.Println("CREATE HOUSE")
 	fmt.Println("Request Body:", string(body))
-	var house models.House
+	var house db.House
 	if err := json.Unmarshal(body, &house); err != nil {
 		respondWithError(w, http.StatusBadRequest, "Invalid request")
 		panic(err)
 	}
 	fmt.Println("House object:", house)
 
-	server.World.AddHouse(house)
+	server.DB.InsertHouse(&house)
 	respondWithJSON(w, http.StatusCreated, house)
 }
 
 func (server *Server) getHouses(w http.ResponseWriter, r *http.Request) {
-	respondWithJSON(w, http.StatusOK, server.World.Houses)
+	fmt.Println("Not yet implemented")
+	//respondWithJSON(w, http.StatusOK, server.World.Houses)
 }
