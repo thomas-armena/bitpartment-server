@@ -10,6 +10,7 @@ type Tenant struct {
 	TenantID  int      `sql:"tenant_id,type:serial,pk"`
 	Username  string   `sql:"username,unique"`
 	Name      string   `sql:"name"`
+	HouseID   int      `sql:"house_id"`
 	RoomID    int      `sql:"room_id,type:smallint"`
 	ActionID  int      `sql:"action_id"`
 }
@@ -49,4 +50,15 @@ func (bpdb *BitpartmentDB) GetTenantByID(id int) (*Tenant, error) {
 	}
 	fmt.Println("Got tenant:", tenant)
 	return tenant, nil
+}
+
+//GetTenantsByHouseID returns a list of tenants who live in a given house
+func (bpdb *BitpartmentDB) GetTenantsByHouseID(houseID int) ([]Tenant, error) {
+	var tenants []Tenant
+	err := bpdb.db.Model(&tenants).Where("house_id = ?0", houseID).Select()
+	if err != nil {
+		return nil, err
+	}
+	fmt.Println("Got tenants:", tenants)
+	return tenants, nil
 }

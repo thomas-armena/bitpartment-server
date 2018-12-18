@@ -22,7 +22,7 @@ type Server struct {
 //NewServer is a constructor for the Server struct
 func NewServer(bpdb *db.BitpartmentDB, clock *clockcycle.ClockCycle) *Server {
 	router := mux.NewRouter()
-	server := &Server{Router: router, DB: bpdb, Clock: clock}
+	server := &Server{Router: router, DB: bpdb, Clock: clock, Connections: make(map[string]*Connection)}
 	server.houseRoutes()
 	server.tenantRoutes()
 	server.websocketRoutes()

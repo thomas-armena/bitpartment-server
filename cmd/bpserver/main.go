@@ -19,28 +19,63 @@ func main() {
 	bitpartmentDB.CreateHousesTable()
 
 	//Test queries
+
+	bitpartmentDB.InsertHouse(&db.House{
+		Name:   "House1",
+		Width:  50,
+		Height: 50,
+	})
+	bitpartmentDB.InsertHouse(&db.House{
+		Name:   "House2",
+		Width:  100,
+		Height: 100,
+	})
+	bitpartmentDB.InsertHouse(&db.House{
+		Name:   "House3",
+		Width:  100,
+		Height: 100,
+	})
+	bitpartmentDB.InsertHouse(&db.House{
+		Name:   "House4",
+		Width:  100,
+		Height: 100,
+	})
+
 	bitpartmentDB.InsertTenant(&db.Tenant{
 		Name:     "Kristie",
 		RoomID:   2,
+		HouseID:  1,
 		ActionID: 4,
 	})
 	bitpartmentDB.InsertTenant(&db.Tenant{
 		Name:     "Donald",
 		RoomID:   3,
+		HouseID:  2,
 		ActionID: 2,
 	})
 	bitpartmentDB.InsertTenant(&db.Tenant{
 		Name:     "Matt",
 		RoomID:   1,
+		HouseID:  2,
 		ActionID: 1,
 	})
 	bitpartmentDB.InsertTenant(&db.Tenant{
 		Name:     "Toby",
 		RoomID:   1,
+		HouseID:  1,
 		ActionID: 1,
 	})
-	bitpartmentDB.DeleteTenantByID(2)
+	bitpartmentDB.InsertTenant(&db.Tenant{
+		Name:     "Rod",
+		RoomID:   5,
+		HouseID:  5,
+		ActionID: 1,
+	})
+
+	//bitpartmentDB.DeleteTenantByID(2)
 	fmt.Println(bitpartmentDB.GetTenantByID(1))
+	fmt.Println(bitpartmentDB.GetTenantsByHouseID(2))
+	fmt.Println(bitpartmentDB.GetHouses())
 
 	//Initialize clock cycle
 	update := make(chan clockcycle.ClockTime)
@@ -55,8 +90,8 @@ func main() {
 	go server.Run()
 	for {
 		clocktime := <-clock.Update
-		fmt.Println(clocktime.Cycle, clocktime.Interval)
 		server.DispatchConnections()
+		fmt.Println(clocktime)
 	}
 
 }

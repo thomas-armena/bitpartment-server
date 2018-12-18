@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/websocket"
+	"github.com/thomas-armena/bitpartment-server/internal/db"
+	"github.com/thomas-armena/bitpartment-server/internal/utils"
 	"net/http"
 )
 
@@ -19,52 +21,56 @@ type message struct {
 	HouseID  int
 }
 
+type output struct {
+	House   db.House
+	Tenants []db.Tenant
+}
+
 func (server *Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	upgrader.CheckOrigin = func(r *http.Request) bool { return true }
 	conn, err := upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		panic(err)
-	}
+	utils.PanicIfErr(err)
+
+	conn.SetCloseHandler(func(code int, text string) error {
+		fmt.Println(code, text)
+		fmt.Println("closing")
+		return nil
+	})
 
 	var msg message
 
 	//Initialize connection with world
-	mType, data, err := conn.ReadMessage()
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	fmt.Println(mType, string(data), err)
-	if err := json.Unmarshal(data, msg); err != nil {
-		panic(err)
-	}
-	fmt.Println(server.OpenConnection(msg.Username, msg.HouseID))
+
+	_, data, err := conn.ReadMessage()
+	utils.PanicIfErr(err)
+
+	err = json.Unmarshal(data, &msg)
+	utils.PanicIfErr(err)
+
+	_, err = server.OpenConnection(msg.Username, msg.HouseID)
+	utils.PanicIfErr(err)
+
 	fmt.Println("connected!")
-	house, err := server.DB.GetHouseByID(msg.HouseID)
-	if err != nil {
-		panic(err)
-	}
-	websocket.WriteJSON(conn, house)
+	out := getOutMessage(server, msg.HouseID)
+	websocket.WriteJSON(conn, out)
 
 	//Change connection to world
 	go func(server *Server, conn *websocket.Conn, msg *message) {
 		for {
-			mType, data, err := conn.ReadMessage()
+			_, data, err := conn.ReadMessage()
 			if err != nil {
-				fmt.Println(err)
+				fmt.Println("error occured on listening")
+				server.CloseConnection(msg.Username)
 				return
 			}
-			fmt.Println(mType, string(data), err)
-			if err := json.Unmarshal(data, msg); err != nil {
-				panic(err)
-			}
-			fmt.Println(server.ChangeConnection((*msg).Username, (*msg).HouseID))
-			fmt.Println("connection changed")
-			house, err := server.DB.GetHouseByID((*msg).HouseID)
-			if err != nil {
-				panic(err)
-			}
-			websocket.WriteJSON(conn, house)
+
+			err = json.Unmarshal(data, msg)
+			utils.PanicIfErr(err)
+
+			server.ChangeConnection(msg.Username, msg.HouseID)
+
+			out := getOutMessage(server, msg.HouseID)
+			websocket.WriteJSON(conn, out)
 		}
 	}(server, conn, &msg)
 
@@ -72,7 +78,24 @@ func (server *Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	go func(server *Server, conn *websocket.Conn, msg *message) {
 		for {
 			houseID := <-server.Connections[msg.Username].Channel
-			websocket.WriteJSON(conn, struct{ id int }{id: houseID})
+			out := getOutMessage(server, houseID)
+			websocket.WriteJSON(conn, out)
 		}
 	}(server, conn, &msg)
+}
+
+func getOutMessage(server *Server, houseID int) output {
+	house, err := server.DB.GetHouseByID(houseID)
+	if err != nil {
+		panic(err)
+	}
+	tenants, err := server.DB.GetTenantsByHouseID(houseID)
+	if err != nil {
+		panic(err)
+	}
+	out := output{
+		House:   *house,
+		Tenants: tenants,
+	}
+	return out
 }

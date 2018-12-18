@@ -38,3 +38,14 @@ func (bpdb *BitpartmentDB) GetHouseByID(id int) (*House, error) {
 	fmt.Println("Got house:", house)
 	return house, nil
 }
+
+//GetHouses returns all the houses in the database
+func (bpdb *BitpartmentDB) GetHouses() ([]House, error) {
+	var houses []House
+	err := bpdb.db.Model(&houses).Select()
+	if err != nil {
+		return nil, err
+	}
+	fmt.Println("Got houses", houses)
+	return houses, nil
+}

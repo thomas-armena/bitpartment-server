@@ -20,10 +20,17 @@ func (server *Server) DispatchConnections() {
 }
 
 //OpenConnection adds a connection to the server
-func (server *Server) OpenConnection(connectionID string, houseID int) *Connection {
-	fmt.Println("connid", connectionID, "houseID", houseID)
+func (server *Server) OpenConnection(connectionID string, houseID int) (*Connection, error) {
+
+	//return error if connection already exists
+	if _, ok := server.Connections[connectionID]; ok {
+		return nil, &ErrConnExists{connectionID}
+	}
+
 	server.Connections[connectionID] = &Connection{HouseID: houseID, ConnectionID: connectionID, Channel: make(chan int)}
-	return server.Connections[connectionID]
+
+	fmt.Println("Opened Connection:", server.Connections[connectionID])
+	return server.Connections[connectionID], nil
 }
 
 //ChangeConnection changes the houseID of a connection
@@ -39,4 +46,11 @@ func (server *Server) CloseConnection(connectionID string) {
 	if ok {
 		delete(server.Connections, connectionID)
 	}
+}
+
+//ErrConnExists happens when a connection that already exists is attempted to be opened
+type ErrConnExists struct{ connectionID string }
+
+func (err *ErrConnExists) Error() string {
+	return fmt.Sprintf("The connection with id %s already exists", err.connectionID)
 }

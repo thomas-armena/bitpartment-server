@@ -36,6 +36,9 @@ func (server *Server) createHouse(w http.ResponseWriter, r *http.Request) {
 }
 
 func (server *Server) getHouses(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("Not yet implemented")
-	//respondWithJSON(w, http.StatusOK, server.World.Houses)
+	houses, err := server.DB.GetHouses()
+	if err != nil {
+		panic(err)
+	}
+	respondWithJSON(w, http.StatusOK, houses)
 }
