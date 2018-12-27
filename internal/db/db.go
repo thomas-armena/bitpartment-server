@@ -45,6 +45,15 @@ func (bpdb *BitpartmentDB) Close() error {
 	return nil
 }
 
+//Update the database based on a provided model
+func (bpdb *BitpartmentDB) Update(model interface{}) error {
+	err := orm.Update(bpdb.db, model)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 //ErrConn is an error that occurs when connection to database fails
 var ErrConn = errors.New("Failed to connect to database")
 
@@ -59,7 +68,7 @@ func (bpdb *BitpartmentDB) createSomeTable(model interface{}, name string) error
 	if err != nil {
 		return err
 	}
-	fmt.Println("Created", name, "table")
+	fmt.Println("Created", name, "table", model)
 	return nil
 }
 
@@ -74,11 +83,11 @@ func (bpdb *BitpartmentDB) dropSomeTable(model interface{}, name string) error {
 	return nil
 }
 
-func (bpdb *BitpartmentDB) insert(model interface{}, name string) error {
+func (bpdb *BitpartmentDB) insert(model interface{}, name string) (interface{}, error) {
 	err := bpdb.db.Insert(model)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	fmt.Println("Inserted into", name)
-	return nil
+	fmt.Println("Inserted", model, "into", name)
+	return model, nil
 }

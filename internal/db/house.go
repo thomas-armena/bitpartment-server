@@ -24,7 +24,7 @@ func (bpdb *BitpartmentDB) DropHousesTable() error {
 }
 
 //InsertHouse inserts a house into the houses table
-func (bpdb *BitpartmentDB) InsertHouse(house *House) error {
+func (bpdb *BitpartmentDB) InsertHouse(house *House) (interface{}, error) {
 	return bpdb.insert(house, "HOUSE")
 }
 
