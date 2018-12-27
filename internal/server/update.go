@@ -16,8 +16,6 @@ func (server *Server) UpdateStates(day, interval int) {
 		intervalPassed := tenant.NextInterval <= interval
 		if dayPassed || (dayEqual && intervalPassed) {
 			executeAnAction(server, &tenant, day, interval)
-			err := server.DB.Update(&tenant)
-			utils.PanicIfErr(err)
 		}
 		fmt.Println(tenant)
 		return nil
@@ -30,12 +28,35 @@ func executeAnAction(server *Server, tenant *db.Tenant, day, interval int) {
 	if action == nil {
 		action = getAFillerAction(server, tenant)
 	}
-	execute(tenant, action)
 
 	//set next day and interval
-	intervals := 5
+	intervals := action.Intervals
 	tenant.NextInterval = (interval + intervals) % server.Clock.Frequency
 	tenant.NextDay = day + int((interval+intervals)/server.Clock.Frequency)
+
+	execute(server, tenant, action)
+}
+
+func execute(server *Server, tenant *db.Tenant, action *db.Action) {
+
+	//Make previous action point to no one
+	if tenant.ActionID != -1 {
+		prevAction, err := server.DB.GetActionByTenantID(tenant.TenantID)
+		utils.PanicIfErr(err)
+		prevAction.TenantID = -1
+		err = server.DB.Update(prevAction)
+		utils.PanicIfErr(err)
+	}
+
+	//Make tenant point to new action
+	tenant.ActionID = action.ActionID
+	err := server.DB.Update(tenant)
+	utils.PanicIfErr(err)
+
+	//Make new action point to tenant
+	action.TenantID = tenant.TenantID
+	err = server.DB.Update(action)
+	utils.PanicIfErr(err)
 }
 
 func getAQueuedAction(server *Server, tenant *db.Tenant) *db.Action {
@@ -47,8 +68,4 @@ func getAFillerAction(server *Server, tenant *db.Tenant) *db.Action {
 	utils.PanicIfErr(err)
 	choice := rand.Intn(len(actions))
 	return &actions[choice]
-}
-
-func execute(tenant *db.Tenant, action *db.Action) {
-	tenant.ActionID = action.ActionID
 }

@@ -60,7 +60,7 @@ func (bpdb *BitpartmentDB) GetTenantByID(id int) (*Tenant, error) {
 //GetTenantsByHouseID returns a list of tenants who live in a given house
 func (bpdb *BitpartmentDB) GetTenantsByHouseID(houseID int) ([]Tenant, error) {
 	var tenants []Tenant
-	err := bpdb.db.Model(&tenants).Where("house_id = ?0", houseID).Select()
+	err := bpdb.db.Model(&tenants).Where("house_id = ?0", houseID).Order("tenant_id").Select()
 	if err != nil {
 		return nil, err
 	}

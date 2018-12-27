@@ -8,6 +8,7 @@ type Action struct {
 	HouseID   int      `sql:"house_id"`
 	TenantID  int      `sql:"tenant_id"`
 	Type      string   `sql:"type"`
+	Intervals int      `sql:"intervals"`
 }
 
 //CreateActionsTable creates a room table in a database
@@ -44,4 +45,14 @@ func (bpdb *BitpartmentDB) GetActionsByHouseID(houseID int) ([]Action, error) {
 		return nil, err
 	}
 	return actions, nil
+}
+
+//GetActionByTenantID returns a tenants actions
+func (bpdb *BitpartmentDB) GetActionByTenantID(tenantID int) (*Action, error) {
+	var action Action
+	err := bpdb.db.Model(&action).Where("tenant_id = ?0", tenantID).Select()
+	if err != nil {
+		return nil, err
+	}
+	return &action, nil
 }

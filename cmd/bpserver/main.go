@@ -34,31 +34,31 @@ func main() {
 		Name:     "Kristie",
 		RoomID:   2,
 		HouseID:  1,
-		ActionID: 4,
+		ActionID: -1,
 	})
 	bitpartmentDB.InsertTenant(&db.Tenant{
 		Name:     "Donald",
 		RoomID:   3,
 		HouseID:  2,
-		ActionID: 2,
+		ActionID: -1,
 	})
 	bitpartmentDB.InsertTenant(&db.Tenant{
 		Name:     "Matt",
 		RoomID:   1,
 		HouseID:  2,
-		ActionID: 1,
+		ActionID: -1,
 	})
 	bitpartmentDB.InsertTenant(&db.Tenant{
 		Name:     "Toby",
 		RoomID:   1,
 		HouseID:  1,
-		ActionID: 1,
+		ActionID: -1,
 	})
 	bitpartmentDB.InsertTenant(&db.Tenant{
 		Name:     "Rod",
 		RoomID:   5,
 		HouseID:  5,
-		ActionID: 1,
+		ActionID: -1,
 	})
 
 	//bitpartmentDB.DeleteTenantByID(2)
@@ -68,7 +68,7 @@ func main() {
 	//Initialize clock cycle
 	update := make(chan clockcycle.ClockTime)
 	location, _ := time.LoadLocation("EST")
-	frq := 12
+	frq := 24
 	startTime := time.Date(time.Now().Year(), time.Now().Month(), time.Now().Day(), 0, 0, 0, 0, location)
 	clock := clockcycle.ClockCycle{StartTime: startTime, Interval: time.Duration(1 * time.Second), Frequency: frq, Update: update}
 	go clock.Start()
@@ -101,10 +101,10 @@ func insertBaseHouse(bpdb *db.BitpartmentDB, name string) {
 }
 
 //ActionsInRoom Contains a map of starting actions inside a room
-var ActionsInRoom = map[string][]string{
-	"gym":         {"weight training", "cardio training"},
-	"bar":         {"bartending", "socializing"},
-	"living room": {"watching tv", "socializing"},
+var ActionsInRoom = map[string][]db.Action{
+	"gym":         {db.Action{Type: "weight training", Intervals: 1}, db.Action{Type: "cardio training", Intervals: 2}},
+	"bar":         {db.Action{Type: "bartending", Intervals: 4}, db.Action{Type: "socializing", Intervals: 3}},
+	"living room": {db.Action{Type: "watching tv", Intervals: 2}, db.Action{Type: "socializing", Intervals: 4}},
 }
 
 func insertBaseRoom(bpdb *db.BitpartmentDB, name string, houseID int) {
@@ -120,12 +120,10 @@ func insertBaseRoom(bpdb *db.BitpartmentDB, name string, houseID int) {
 	roomID := room.RoomID
 
 	for _, action := range ActionsInRoom[name] {
-		bpdb.InsertAction(&db.Action{
-			RoomID:   roomID,
-			HouseID:  houseID,
-			TenantID: -1,
-			Type:     action,
-		})
+		action.RoomID = roomID
+		action.HouseID = houseID
+		action.TenantID = -1
+		bpdb.InsertAction(&action)
 	}
 
 }
