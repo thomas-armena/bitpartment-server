@@ -70,7 +70,7 @@ func main() {
 	location, _ := time.LoadLocation("EST")
 	frq := 24
 	startTime := time.Date(time.Now().Year(), time.Now().Month(), time.Now().Day(), 0, 0, 0, 0, location)
-	clock := clockcycle.ClockCycle{StartTime: startTime, Interval: time.Duration(1 * time.Second), Frequency: frq, Update: update}
+	clock := clockcycle.ClockCycle{StartTime: startTime, IntervalDuration: time.Duration(1 * time.Second), Frequency: frq, Update: update}
 	go clock.Start()
 
 	//Initialize server

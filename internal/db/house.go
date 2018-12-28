@@ -11,6 +11,8 @@ type House struct {
 	Name      string   `sql:"name"`
 	Width     int      `sql:"width,type:smallint"`
 	Height    int      `sql:"height,type:smallint"`
+	Day       int      `sql:"day"`
+	Interval  int      `sql:"interval"`
 }
 
 //CreateHousesTable creates a houses table in a database

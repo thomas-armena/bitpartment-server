@@ -22,10 +22,12 @@ type message struct {
 }
 
 type output struct {
-	House   db.House
-	Tenants []db.Tenant
-	Actions []db.Action
-	Rooms   []db.Room
+	House    db.House
+	Tenants  []db.Tenant
+	Actions  []db.Action
+	Rooms    []db.Room
+	Cycle    int
+	Interval int
 }
 
 func (server *Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
@@ -106,10 +108,12 @@ func getOutMessage(server *Server, houseID int) output {
 	}
 
 	out := output{
-		House:   *house,
-		Tenants: tenants,
-		Actions: actions,
-		Rooms:   rooms,
+		House:    *house,
+		Tenants:  tenants,
+		Actions:  actions,
+		Rooms:    rooms,
+		Cycle:    server.Clock.Cycle,
+		Interval: server.Clock.Interval,
 	}
 	return out
 }
