@@ -13,7 +13,6 @@ type Tenant struct {
 	Name     string `sql:"name"`
 
 	HouseID  int `sql:"house_id"`
-	RoomID   int `sql:"room_id,type:smallint"`
 	ActionID int `sql:"action_id"`
 
 	NextInterval int `sql:"next_interval"`

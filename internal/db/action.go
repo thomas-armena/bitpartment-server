@@ -1,5 +1,9 @@
 package db
 
+import (
+	"github.com/go-pg/pg/orm"
+)
+
 //Action represents the outcome and info of an action to be performed
 type Action struct {
 	tableName struct{} `sql:"actions"`
@@ -7,6 +11,7 @@ type Action struct {
 	RoomID    int      `sql:"room_id"`
 	HouseID   int      `sql:"house_id"`
 	TenantID  int      `sql:"tenant_id"`
+	OwnerID   int      `sql:"owner_id"`
 	Type      string   `sql:"type"`
 	Intervals int      `sql:"intervals"`
 }
@@ -28,9 +33,16 @@ func (bpdb *BitpartmentDB) InsertAction(action *Action) (interface{}, error) {
 
 //GetAvailableActionsByHouseID gets actions that are both not occupied
 //by a tenant and contain the corresponding HouseID
-func (bpdb *BitpartmentDB) GetAvailableActionsByHouseID(houseID int) ([]Action, error) {
+func (bpdb *BitpartmentDB) GetAvailableActionsByHouseID(tenantID, houseID int) ([]Action, error) {
 	var actions []Action
-	err := bpdb.db.Model(&actions).Where("house_id = ?0", houseID).Where("tenant_id = -1").Select()
+	err := bpdb.db.Model(&actions).
+		Where("house_id = ?0", houseID).
+		Where("tenant_id = -1").
+		WhereGroup(func(q *orm.Query) (*orm.Query, error) {
+			q = q.WhereOr("owner_id = -1").WhereOr("owner_id = ?0", tenantID)
+			return q, nil
+		}).
+		Select()
 	if err != nil {
 		return nil, err
 	}

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/thomas-armena/bitpartment-server/internal/db"
 	"github.com/thomas-armena/bitpartment-server/internal/server"
+	"github.com/thomas-armena/bitpartment-server/internal/utils"
 	"github.com/thomas-armena/bitpartment-server/pkg/clockcycle"
 	"time"
 )
@@ -30,40 +31,31 @@ func main() {
 	insertBaseHouse(&bitpartmentDB, "basehouse4")
 	insertBaseHouse(&bitpartmentDB, "basehouse5")
 
-	bitpartmentDB.InsertTenant(&db.Tenant{
+	insertTenantWithRoom(&bitpartmentDB, &db.Tenant{
 		Name:     "Kristie",
-		RoomID:   2,
 		HouseID:  1,
 		ActionID: -1,
 	})
-	bitpartmentDB.InsertTenant(&db.Tenant{
+	insertTenantWithRoom(&bitpartmentDB, &db.Tenant{
 		Name:     "Donald",
-		RoomID:   3,
 		HouseID:  2,
 		ActionID: -1,
 	})
-	bitpartmentDB.InsertTenant(&db.Tenant{
+	insertTenantWithRoom(&bitpartmentDB, &db.Tenant{
 		Name:     "Matt",
-		RoomID:   1,
 		HouseID:  2,
 		ActionID: -1,
 	})
-	bitpartmentDB.InsertTenant(&db.Tenant{
+	insertTenantWithRoom(&bitpartmentDB, &db.Tenant{
 		Name:     "Toby",
-		RoomID:   1,
 		HouseID:  1,
 		ActionID: -1,
 	})
-	bitpartmentDB.InsertTenant(&db.Tenant{
+	insertTenantWithRoom(&bitpartmentDB, &db.Tenant{
 		Name:     "Rod",
-		RoomID:   5,
 		HouseID:  5,
 		ActionID: -1,
 	})
-
-	//bitpartmentDB.DeleteTenantByID(2)
-	a, _ := bitpartmentDB.GetAvailableActionsByHouseID(1)
-	fmt.Println(a)
 
 	//Initialize clock cycle
 	update := make(chan clockcycle.ClockTime)
@@ -102,13 +94,13 @@ func insertBaseHouse(bpdb *db.BitpartmentDB, name string) {
 
 //ActionsInRoom Contains a map of starting actions inside a room
 var ActionsInRoom = map[string][]db.Action{
-	"gym":         {db.Action{Type: "weight training", Intervals: 1}, db.Action{Type: "cardio training", Intervals: 2}},
-	"bar":         {db.Action{Type: "bartending", Intervals: 4}, db.Action{Type: "socializing", Intervals: 3}},
-	"living room": {db.Action{Type: "watching tv", Intervals: 2}, db.Action{Type: "socializing", Intervals: 4}},
+	"gym":         {db.Action{Type: "weight training", Intervals: 1, OwnerID: -1}, db.Action{Type: "cardio training", Intervals: 2, OwnerID: -1}},
+	"bar":         {db.Action{Type: "bartending", Intervals: 4, OwnerID: -1}, db.Action{Type: "socializing", Intervals: 3, OwnerID: -1}},
+	"living room": {db.Action{Type: "watching tv", Intervals: 2, OwnerID: -1}, db.Action{Type: "socializing", Intervals: 4, OwnerID: -1}},
 }
 
 func insertBaseRoom(bpdb *db.BitpartmentDB, name string, houseID int) {
-	model, _ := bpdb.InsertRoom(&db.Room{
+	model, err := bpdb.InsertRoom(&db.Room{
 		HouseID: houseID,
 		Type:    name,
 		Width:   2,
@@ -116,6 +108,7 @@ func insertBaseRoom(bpdb *db.BitpartmentDB, name string, houseID int) {
 		X:       0,
 		Y:       0,
 	})
+	utils.PanicIfErr(err)
 	room := model.(*db.Room)
 	roomID := room.RoomID
 
@@ -126,4 +119,26 @@ func insertBaseRoom(bpdb *db.BitpartmentDB, name string, houseID int) {
 		bpdb.InsertAction(&action)
 	}
 
+}
+
+func insertTenantWithRoom(bpdb *db.BitpartmentDB, tenant *db.Tenant) {
+	bpdb.InsertTenant(tenant)
+	model, err := bpdb.InsertRoom(&db.Room{
+		HouseID: tenant.HouseID,
+		Type:    tenant.Name + "'s Room",
+		Width:   1,
+		Height:  1,
+		X:       0,
+		Y:       0,
+	})
+	utils.PanicIfErr(err)
+	room := model.(*db.Room)
+	bpdb.InsertAction(&db.Action{
+		RoomID:    room.RoomID,
+		HouseID:   tenant.HouseID,
+		TenantID:  -1,
+		OwnerID:   tenant.TenantID,
+		Type:      "sleeping",
+		Intervals: 8,
+	})
 }

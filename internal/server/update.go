@@ -64,8 +64,9 @@ func getAQueuedAction(server *Server, tenant *db.Tenant) *db.Action {
 }
 
 func getAFillerAction(server *Server, tenant *db.Tenant) *db.Action {
-	actions, err := server.DB.GetAvailableActionsByHouseID(tenant.HouseID)
+	actions, err := server.DB.GetAvailableActionsByHouseID(tenant.TenantID, tenant.HouseID)
 	utils.PanicIfErr(err)
+	fmt.Println(actions)
 	choice := rand.Intn(len(actions))
 	return &actions[choice]
 }
